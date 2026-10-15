@@ -1,0 +1,65 @@
+name: Deploy StockPulseAI to VPS
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.DEPLOY_SSH_PORT || '22' }} ${{ secrets.DEPLOY_SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy Docker Compose file and environment variables
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
+        run: |
+          # Transfer docker-compose.prod.yml
+          scp -P $SSH_PORT docker-compose.prod.yml $SSH_USER@$SSH_HOST:/home/$SSH_USER/stockpulse/
+          # Transfer optional .env file if it exists in repo (you can create .env.example for reference)
+          if [ -f .env ]; then
+            scp -P $SSH_PORT .env $SSH_USER@$SSH_HOST:/home/$SSH_USER/stockpulse/.env
+          fi
+
+      - name: Deploy with Docker Compose
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
+        run: |
+          ssh -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
+            cd /home/$SSH_USER/stockpulse
+            docker compose -f docker-compose.prod.yml pull || true
+            docker compose -f docker-compose.prod.yml up -d --build
+          EOF
+
+      - name: Clean up old images
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
+        run: |
+          ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "docker image prune -af"
+
+      # Optional: Notify on deployment success/failure
+      - name: Notify Slack (optional)
+        if: always()
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: '{"text":"Deployment of StockPulseAI completed: ${{ job.status }}"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
