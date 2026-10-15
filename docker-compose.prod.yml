@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # 1. Persistent Redis Store & Queue Backend
+  redis:
+    image: redis:7-alpine
+    container_name: stockpulse-redis-prod
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-prod-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Persistent MongoDB Database
+  mongo:
+    image: mongo:7
+    container_name: stockpulse-mongo-prod
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: stockpulse_db
+    volumes:
+      - mongo-prod-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Express API Server & Socket.io Gateway
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stockpulse-api-prod
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URL: mongodb://mongo:27017/stockpulse_db
+      REDIS_URL: redis://redis:6379
+      RUN_WORKER_IN_PROCESS: "false"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      NEWSAPI_API_KEY: ${NEWSAPI_API_KEY:-}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY:-}
+      DATA_SOURCE: ${DATA_SOURCE:-MOCK}
+      CORS_ORIGIN: "*"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # 4. Scalable BullMQ Background Worker (Gemini AI Processing)
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["node", "worker.js"]
+    container_name: stockpulse-worker-prod
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://mongo:27017/stockpulse_db
+      REDIS_URL: redis://redis:6379
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 5. Production React Frontend (Served by Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: stockpulse-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  redis-prod-data:
+  mongo-prod-data:

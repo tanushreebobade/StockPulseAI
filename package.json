@@ -1,0 +1,28 @@
+{
+  "name": "stockpulse-ai",
+  "version": "1.0.0",
+  "description": "StockPulse AI - Real-time stock tracking, AI sentiment analysis with Google Gemini, BullMQ & Socket.io",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "seed": "npm --prefix backend run seed",
+    "start:backend": "npm --prefix backend run dev",
+    "start:frontend": "npm --prefix frontend start",
+    "prod:build": "docker compose -f docker-compose.prod.yml build",
+    "prod:up": "docker compose -f docker-compose.prod.yml up -d",
+    "prod:down": "docker compose -f docker-compose.prod.yml down",
+    "prod:logs": "docker compose -f docker-compose.prod.yml logs -f"
+  },
+  "keywords": [
+    "stock-market",
+    "gemini-ai",
+    "bullmq",
+    "socketio",
+    "redis",
+    "mongodb",
+    "react"
+  ],
+  "author": "",
+  "license": "MIT"
+}

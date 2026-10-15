@@ -1,0 +1,170 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Variables for Premium Themes */
+:root {
+  /* Onyx default (Pitch Black & Charcoal Glass) */
+  --bg-color: #000000;
+  --card-bg: rgba(18, 18, 22, 0.7);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --accent-color: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.15);
+  --text-muted: #8e929e;
+  --text-title: #ffffff;
+  --header-bg: rgba(0, 0, 0, 0.85);
+  --input-bg: rgba(10, 10, 12, 0.8);
+}
+
+[data-theme='nebula'] {
+  /* Midnight Nebula (Dark Blue-Violet & Neon Indigo) */
+  --bg-color: #050512;
+  --card-bg: rgba(18, 18, 42, 0.5);
+  --card-border: rgba(129, 140, 248, 0.18);
+  --accent-color: #818cf8;
+  --accent-glow: rgba(129, 140, 248, 0.18);
+  --text-muted: #9ba1cc;
+  --text-title: #f3f4f6;
+  --header-bg: rgba(5, 5, 18, 0.85);
+  --input-bg: rgba(12, 12, 34, 0.8);
+}
+
+[data-theme='emerald'] {
+  /* Emerald Hedge (Forest Black & Gold-Emerald Glass) */
+  --bg-color: #020705;
+  --card-bg: rgba(8, 24, 18, 0.65);
+  --card-border: rgba(16, 185, 129, 0.18);
+  --accent-color: #10b981;
+  --accent-glow: rgba(16, 185, 129, 0.15);
+  --text-muted: #8ba396;
+  --text-title: #f0fdf4;
+  --header-bg: rgba(2, 7, 5, 0.85);
+  --input-bg: rgba(5, 15, 11, 0.8);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-title);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Custom scrolling list styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Stock Pulse Glow & Flashing Keyframes */
+@keyframes flash-green {
+  0% {
+    background-color: rgba(8, 153, 129, 0.22);
+    box-shadow: inset 0 0 12px rgba(8, 153, 129, 0.2), 0 0 15px rgba(8, 153, 129, 0.15);
+    border-color: rgba(8, 153, 129, 0.5);
+  }
+  100% {
+    background-color: var(--card-bg);
+    box-shadow: none;
+    border-color: var(--card-border);
+  }
+}
+
+@keyframes flash-red {
+  0% {
+    background-color: rgba(242, 54, 69, 0.22);
+    box-shadow: inset 0 0 12px rgba(242, 54, 69, 0.2), 0 0 15px rgba(242, 54, 69, 0.15);
+    border-color: rgba(242, 54, 69, 0.5);
+  }
+  100% {
+    background-color: var(--card-bg);
+    box-shadow: none;
+    border-color: var(--card-border);
+  }
+}
+
+.animate-flash-up {
+  animation: flash-green 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-flash-down {
+  animation: flash-red 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Ticker Tape Animations */
+@keyframes ticker-slide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-ticker {
+  display: flex;
+  width: max-content;
+  animation: ticker-slide 40s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+/* Custom flat styles replacing blocky cards */
+.premium-card {
+  background: transparent;
+  border: none;
+  border-radius: 0px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  transition: background-color 0.2s ease;
+}
+
+.premium-card:hover {
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+/* GPU Hardware Acceleration for active ticker and layout elements */
+.animate-ticker, 
+.sticky, 
+main,
+button {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+

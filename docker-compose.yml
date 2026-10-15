@@ -1,0 +1,27 @@
+services:
+  # 1. Our Redis Container
+  redis:
+    image: redis:7-alpine
+    container_name: stockpulse-redis
+    ports:
+      - "6379:6379"
+    # --appendonly yes ensures our data isn't lost if the container restarts
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+
+  # 2. Our MongoDB Container
+  mongo:
+    image: mongo:7
+    container_name: stockpulse-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: stockpulse_db
+    volumes:
+      - mongo-data:/data/db
+
+# Volumes ensure our data persists on our hard drive
+volumes:
+  redis-data:
+  mongo-data:
